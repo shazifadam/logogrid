@@ -1,0 +1,58 @@
+name: Scrape Logos and Deploy
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Daily at midnight UTC (5 AM Maldives time)
+  workflow_dispatch:  # Manual trigger button in GitHub UI
+  push:
+    branches:
+      - main  # Deploy when pushing to main branch
+
+jobs:
+  scrape-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      
+      - name: Install Python dependencies
+        run: |
+          pip install -r requirements.txt
+      
+      - name: Create directories
+        run: |
+          mkdir -p data
+          mkdir -p app/static/cached-logos
+          mkdir -p app/static/placeholders
+          mkdir -p public
+      
+      - name: Run scraper
+        run: |
+          python -m app.refresh
+        continue-on-error: true
+      
+      - name: Build static site
+        run: |
+          python build.py --skip-scrape
+      
+      - name: Deploy to Firebase
+        uses: w9jds/firebase-action@master
+        with:
+          args: deploy --only hosting
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+      
+      - name: Commit updated logos
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add data/logos.json app/static/cached-logos app/static/placeholders
+          git diff --quiet && git diff --staged --quiet || git commit -m "🔄 Auto-update logos [skip ci]"
+          git push
+        continue-on-error: true

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - LogoGrid</title>
+    <style>
+        :root {
+            --background: 0 0% 100%;
+            --foreground: 222.2 84% 4.9%;
+            --card: 0 0% 100%;
+            --primary: 222.2 47.4% 11.2%;
+            --primary-foreground: 210 40% 98%;
+            --secondary: 210 40% 96.1%;
+            --destructive: 0 84.2% 60.2%;
+            --destructive-foreground: 210 40% 98%;
+            --border: 214.3 31.8% 91.4%;
+            --input: 214.3 31.8% 91.4%;
+            --muted: 210 40% 96.1%;
+            --muted-foreground: 215.4 16.3% 46.9%;
+            --radius: 0.5rem;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: hsl(var(--background)); color: hsl(var(--foreground)); line-height: 1.5; }
+        .header { border-bottom: 1px solid hsl(var(--border)); background: hsl(var(--card)); position: sticky; top: 0; z-index: 50; }
+        .header-content { max-width: 1400px; margin: 0 auto; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 1.25rem; font-weight: 600; }
+        .btn { display: inline-flex; align-items: center; justify-content: center; border-radius: var(--radius); font-size: 0.875rem; font-weight: 500; padding: 0.5rem 1rem; border: none; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+        .btn-primary { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+        .btn-primary:hover { background: hsl(var(--primary) / 0.9); }
+        .btn-secondary { background: hsl(var(--secondary)); color: hsl(var(--foreground)); }
+        .btn-destructive { background: hsl(var(--destructive)); color: hsl(var(--destructive-foreground)); padding: 0.375rem 0.75rem; font-size: 0.8125rem; }
+        .btn-outline { border: 1px solid hsl(var(--input)); background: transparent; }
+        .btn-outline:hover { background: hsl(var(--muted)); }
+        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+        .alert { padding: 1rem; border-radius: var(--radius); margin-bottom: 1.5rem; border: 1px solid; }
+        .alert-success { background: hsl(142.1 76.2% 36.3% / 0.1); border-color: hsl(142.1 76.2% 36.3% / 0.3); color: hsl(142.1 70.6% 45.3%); }
+        .alert-error { background: hsl(var(--destructive) / 0.1); border-color: hsl(var(--destructive) / 0.3); color: hsl(var(--destructive)); }
+        .card { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: calc(var(--radius) + 2px); padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
+        .card-header { margin-bottom: 1.5rem; }
+        .card-title { font-size: 1.25rem; font-weight: 600; }
+        .card-description { font-size: 0.875rem; color: hsl(var(--muted-foreground)); margin-top: 0.25rem; }
+        .form-group { margin-bottom: 1rem; }
+        .form-label { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem; }
+        .form-input, .form-select { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid hsl(var(--input)); border-radius: var(--radius); font-size: 0.875rem; background: hsl(var(--background)); }
+        .form-input:focus, .form-select:focus { outline: none; border-color: hsl(var(--primary)); box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1); }
+        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+        .table-container { border: 1px solid hsl(var(--border)); border-radius: var(--radius); overflow: hidden; }
+        .table { width: 100%; border-collapse: collapse; }
+        .table thead { background: hsl(var(--muted)); }
+        .table th { padding: 0.75rem 1rem; text-align: left; font-size: 0.875rem; font-weight: 500; text-transform: uppercase; }
+        .table td { padding: 1rem; border-top: 1px solid hsl(var(--border)); font-size: 0.875rem; }
+        .table tbody tr:hover { background: hsl(var(--muted) / 0.5); }
+        .badge { display: inline-flex; padding: 0.25rem 0.625rem; border-radius: calc(var(--radius) - 2px); font-size: 0.75rem; font-weight: 500; }
+        .badge-success { background: hsl(142.1 76.2% 36.3% / 0.1); color: hsl(142.1 70.6% 45.3%); }
+        .badge-warning { background: hsl(45.4 93.4% 47.5% / 0.1); color: hsl(45.4 93.4% 47.5%); }
+        .badge-error { background: hsl(var(--destructive) / 0.1); color: hsl(var(--destructive)); }
+        .badge-secondary { background: hsl(var(--secondary)); }
+        .actions { display: flex; gap: 0.75rem; margin-top: 1rem; }
+        .text-sm { font-size: 0.875rem; color: hsl(var(--muted-foreground)); margin-top: 0.25rem; }
+        @media (max-width: 768px) { .form-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>LogoGrid Admin</h1>
+            <a href="/admin/logout" class="btn btn-outline">Logout</a>
+        </div>
+    </div>
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Quick Actions</h2>
+                <p class="card-description">Manage your logo grid and scraping operations</p>
+            </div>
+            <div class="actions">
+                <form method="POST" action="/admin/scrape-now">
+                    <button type="submit" class="btn btn-primary">🔄 Scrape All Sites</button>
+                </form>
+                <a href="/" class="btn btn-secondary" target="_blank">👁️ View Frontend</a>
+          v>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Add New Institute</h2>
+                <p class="card-description">Add a new organization to scrape and display</p>
+            </div>
+            <form method="POST" action="/admin/add-site">
+                <div class="form-group">
+                    <label class="form-label" for="name">Institute Name *</label>
+                    <input type="text" id="name" name="name" class="form-input" required placeholder="Ministry of Education">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="url">Website URL *</label>
+                    <input type="url" id="url" name="url" class="form-input" required placeholder="https://example.gov.mv">
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="fallback_logo_url">Manual Logo URL (Optional)</label>
+                        <input type="url" id="fallback_logo_url" name="fallback_logo_url" class="form-input" placeholder="https://example.com/logo.png">
+                        <p class="text-sm">Used if scraping fails or for manual override</p>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="category">Category</label>
+                        <select id="category" name="category" class="form-select">
+                            <option value="government">Government</option>
+                            <option value="ministry">Ministry</option>
+                            <option value="agency">Agency</option>
+                            <option value="institute">Institute</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Add Institute</button>
+            </form>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Institutes ({{ sites|length }})</h2>
+                <p class="card-description">Manage all registered organizations</p>
+            </div>
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>URL</th>
+                            <th>Manual Logo</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for site in sites %}
+                        <tr>
+                            <td><strong>{{ site.name }}</strong></td>
+                            <td><a href="{{ site.url }}" target="_blank">{{ site.url }}</a></td>
+                            <td>
+                                {% if site.fallback_logo_url %}
+                                    <span class="badge badge-success">✓ Set</span>
+                                {% else %}
+                                    <span class="badge badge-secondary">None</span>
+                                {% endif %}
+                            </td>
+                            <td><span class="badge badge-secondary">{{ site.category }}</span></td>
+                            <td>
+                                {% set logo_found = namespace(status=None) %}
+                                {% for logo in logos %}
+                                    {% if logo.site_url == site.url %}
+                                        {% set logo_found.status = logo.status %}
+                                    {% endif %}
+                                {% endfor %}
+                                {% if logo_found.status == 'ok' %}
+                                    <span class="badge badge-success">✓ OK</span>
+                            {% elif logo_found.status == 'fallback' %}
+                                    <span class="badge badge-warning">⚠ Fallback</span>
+                                {% elif logo_found.status == 'error' %}
+                                    <span class="badge badge-error">✗ Error</span>
+                                {% else %}
+                                    <span class="badge badge-secondary">Not Scraped</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <form method="POST" action="/admin/delete-site">
+                                    <input type="hidden" name="url" value="{{ site.url }}">
+                                    <button type="submit" class="btn btn-destructive" onclick="return confirm('Delete {{ site.name }}?')">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

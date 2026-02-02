@@ -1,0 +1,24 @@
+[
+  {
+    "url": "https://foreign.gov.mv",
+    "name": "Ministry of Foreign Affairs",
+    "category": "government",
+    "country": "MV",
+    "enabled": true
+  },
+  {
+    "url": "https://health.gov.mv",
+    "name": "Ministry of Health",
+    "category": "government",
+    "country": "MV",
+    "enabled": true
+  },
+  {
+    "url": "https://presidency.gov.mv/",
+    "name": "President's Office",
+    "category": "government",
+    "country": "MV",
+    "enabled": true,
+    "fallback_logo_url": "https://presidency.gov.mv/images/po-logo.svg"
+  }
+]

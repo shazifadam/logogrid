@@ -1,0 +1,18 @@
+{
+  "refresh_schedule": {
+    "time": "00:00",
+    "timezone": "Indian/Maldives"
+  },
+  "scraper": {
+    "timeout": 45,
+    "max_retries": 2,
+    "concurrent_requests": 5,
+    "respect_robots_txt": false,
+    "user_agent": "LogoGrid/1.0 (+https://your-domain.com/about)"
+  },
+  "cache": {
+    "max_age_days": 30,
+    "image_max_size_mb": 5,
+    "image_output_size": 400
+  }
+}

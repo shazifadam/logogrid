@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LogoGrid - Organization Logos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <header class="site-header">
+        <div class="search-container">
+            <input type="text" 
+                   id="search" 
+                   class="search-input" 
+                   placeholder="Search here"
+                   autocomplete="off">
+            <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+            </svg>
+        </div>
+    </header>
+
+    <main class="logo-grid" role="main" aria-label="Organization Logos">
+        <h1 class="sr-only">Partner Organization Logos</h1>
+        
+        {% if logos %}
+            {% for site in logos %}
+            <article class="logo-tile" data-name="{{ site.display_name | lower }}" data-status="{{ site.status }}">
+                <a href="{{ site.site_url }}" target="_blank" rel="noopener">
+                    <img src="{{ site.logo_url }}" 
+                         alt="{{ site.display_name }} logo" 
+                         loading="lazy"
+                         class="logo-image">
+                </a>
+                <p class="logo-name">{{ site.display_name }}</p>
+            </article>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <p>No logos available yet. Run the scraper to populate the grid.</p>
+            </div>
+        {% endif %}
+    </main>
+
+    <script>
+        // Simple search filtering
+        const searchInput = document.getElementById('search');
+        const logoTiles = document.querySelectorAll('.logo-tile');
+
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            
+            logoTiles.forEach(tile => {
+                const name = tile.getAttribute('data-name');
+                if (name.includes(searchTerm)) {
+                    tile.style.display = 'flex';
+                } else {
+                    tile.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
