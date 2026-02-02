@@ -55,7 +55,7 @@ class LogoRefresher:
         with open(self.sites_path, 'r') as f:
             sites = json.load(f)
         
-        # Load existing logos for caching
+        # Load existing logos for preservation
         existing_logos = self._load_existing_logos()
         
         results = []
@@ -79,19 +79,14 @@ class LogoRefresher:
     
     def refresh_single(self, site_url):
         """Refresh a single site."""
-        # Load sites
         with open(self.sites_path, 'r') as f:
             sites = json.load(f)
         
-        # Find the site
         site = next((s for s in sites if s['url'] == site_url), None)
         if not site:
             raise ValueError(f"Site not found: {site_url}")
         
-        # Load existing logos
         existing_logos = self._load_existing_logos()
-        
-        # Process the site
         result = self._process_site(site, existing_logos)
         
         # Update logos.json
@@ -105,10 +100,16 @@ class LogoRefresher:
         return result
     
     def _process_site(self, site, existing_logos):
-        """Process a single site."""
+        """Process a single site with logo preservation."""
         site_url = site['url']
         domain = urlparse(site_url).netloc
         domain_slug = domain.replace('.', '-')
+        
+        # Find existing logo for this site
+        existing_logo = next(
+            (logo for logo in existing_logos if logo['site_url'] == site_url),
+            None
+        )
         
         # Try to extract logo
         extraction = self.extractor.extract_logo(site_url)
@@ -116,9 +117,10 @@ class LogoRefresher:
         logo_url = None
         status = 'error'
         error_message = extraction.get('error')
+        extraction_method = extraction.get('method', 'none')
         
+        # Try scraping
         if extraction['status'] == 'ok' and extraction['logo_url']:
-            # Try to process the image
             try:
                 processed = self.processor.process_logo(
                     extraction['logo_url'],
@@ -127,43 +129,56 @@ class LogoRefresher:
                 logo_url = processed['cached_path']
                 status = 'ok'
                 error_message = None
+                logger.info(f"✓ Successfully scraped logo for {site_url}")
                 
             except Exception as e:
                 logger.error(f"Failed to process logo for {site_url}: {e}")
-                # Try fallback URL
-                if site.get('fallback_logo_url'):
-                    logo_url = site['fallback_logo_url']
-                    status = 'fallback'
-                else:
-                    # Generate placeholder
-                    logo_url = self.generator.generate_placeholder(
-                        site.get('name', domain),
-                        domain
-                    )
-                    status = 'fallback'
-        else:
-            # No logo found - try fallback or generate placeholder
-            if site.get('fallback_logo_url'):
-                logo_url = site['fallback_logo_url']
-                status = 'fallback'
-            else:
-                logo_url = self.generator.generate_placeholder(
-                    site.get('name', domain),
-                    domain
+                # Scraping failed, try fallbacks
+                logo_url, status = self._get_fallback_logo(
+                    site, domain, domain_slug, existing_logo
                 )
-                status = 'fallback'
+        else:
+            # No logo found in scraping, use fallbacks
+            logger.warning(f"No logo found via scraping for {site_url}")
+            logo_url, status = self._get_fallback_logo(
+                site, domain, domain_slug, existing_logo
+            )
         
         return {
-            'site_url': site_url,
-            'display_name': site.get('name', domain),
+            'site_url': site_url,           'display_name': site.get('name', domain),
             'logo_url': logo_url,
             'status': status,
             'last_checked_at': datetime.utcnow().isoformat() + 'Z',
-            'extraction_method': extraction.get('method', 'none'),
+            'extraction_method': extraction_method,
             'error_message': error_message,
             'category': site.get('category'),
             'country': site.get('country')
         }
+    
+    def _get_fallback_logo(self, site, domain, domain_slug, existing_logo):
+        """Get fallback logo with priority: existing > manual > placeholder."""
+        
+        # Priority 1: Keep existing logo if it exists and was successful
+        if existing_logo and existing_logo.get('logo_url'):
+            if existing_logo.get('status') == 'ok':
+                logger.info(f"→ Keeping previous successful logo for {site['url']}")
+                return existing_logo['logo_url'], 'ok'
+            elif existing_logo.get('status') == 'fallback':
+                logger.info(f"→ Keeping previous fallback logo for {site['url']}")
+            return existing_logo['logo_url'], 'fallback'
+        
+        # Priority 2: Use manual fallback URL from config
+        if site.get('fallback_logo_url'):
+            logger.info(f"→ Using manual fallback URL for {site['url']}")
+            return site['fallback_logo_url'], 'fallback'
+        
+        # Priority 3: Generate placeholder only if nothing else exists
+        logger.info(f"→ Generating placeholder for {site['url']}")
+        placeholder_url = self.generator.generate_placeholder(
+            site.get('name', domain),
+            domain
+        )
+        return placeholder_url, 'fallback'
     
     def _load_existing_logos(self):
         """Load existing logos.json."""
