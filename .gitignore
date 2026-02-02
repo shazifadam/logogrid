@@ -31,9 +31,12 @@ Thumbs.db
 .coverage
 htmlcov/
 
-# Build output (don't commit public folder - it's generated)
+# Build output
 public/
 
 # Firebase
 .firebase/
 firebase-debug.log
+
+# Keep .gitkeep files but ignore empty directories
+**/.gitkeep
