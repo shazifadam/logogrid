@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400" height="400" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="400" fill="hsl(121, 40%, 85%)"/>
+  <text x="200" y="200" text-anchor="middle" dy=".35em"
+        font-family="system-ui, -apple-system, sans-serif" 
+        font-size="140" font-weight="600" fill="hsl(121, 40%, 35%)">
+    PM
+  </text>
+</svg>

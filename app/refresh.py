@@ -1,5 +1,6 @@
 """
 Main refresh script - scrapes all sites and generates output.
+Manual logos ALWAYS override scraped logos.
 """
 import json
 import os
@@ -14,7 +15,6 @@ from app.scraper.placeholder_generator import PlaceholderGenerator
 
 load_dotenv()
 
-# Setup logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -51,11 +51,9 @@ class LogoRefresher:
         """Refresh all sites."""
         logger.info("Starting full refresh")
         
-        # Load sites
         with open(self.sites_path, 'r') as f:
             sites = json.load(f)
         
-        # Load existing logos for preservation
         existing_logos = self._load_existing_logos()
         
         results = []
@@ -69,7 +67,6 @@ class LogoRefresher:
             result = self._process_site(site, existing_logos)
             results.append(result)
         
-        # Save results
         with open(self.logos_path, 'w') as f:
             json.dump(results, f, indent=2)
         
@@ -89,7 +86,6 @@ class LogoRefresher:
         existing_logos = self._load_existing_logos()
         result = self._process_site(site, existing_logos)
         
-        # Update logos.json
         logos = self._load_existing_logos()
         logos = [l for l in logos if l['site_url'] != site_url]
         logos.append(result)
@@ -100,18 +96,31 @@ class LogoRefresher:
         return result
     
     def _process_site(self, site, existing_logos):
-        """Process a single site with logo preservation."""
+        """Process a single site - MANUAL LOGO ALWAYS WINS."""
         site_url = site['url']
         domain = urlparse(site_url).netloc
         domain_slug = domain.replace('.', '-')
         
-        # Find existing logo for this site
         existing_logo = next(
             (logo for logo in existing_logos if logo['site_url'] == site_url),
             None
         )
         
-        # Try to extract logo
+        # PRIORITY 1: Manual logo URL ALWAYS overrides everything
+        if site.get('fallback_logo_url'):
+            logger.info(f"✓ Using manual logo URL for {site_url} (overrides scraping)")
+            return {
+                'site_url': site_url,
+                'display_name': site.get('name', domain),
+                'logo_url': site['fallback_logo_url'],
+                'status': 'ok',
+                'last_checked_at': datetime.utcnow().isoformat() + 'Z',               'extraction_method': 'manual',
+                'error_message': None,
+                'category': site.get('category'),
+                'country': site.get('country')
+            }
+        
+        # Try to scrape logo
         extraction = self.extractor.extract_logo(site_url)
         
         logo_url = None
@@ -119,7 +128,6 @@ class LogoRefresher:
         error_message = extraction.get('error')
         extraction_method = extraction.get('method', 'none')
         
-        # Try scraping
         if extraction['status'] == 'ok' and extraction['logo_url']:
             try:
                 processed = self.processor.process_logo(
@@ -132,20 +140,19 @@ class LogoRefresher:
                 logger.info(f"✓ Successfully scraped logo for {site_url}")
                 
             except Exception as e:
-                logger.error(f"Failed to process logo for {site_url}: {e}")
-                # Scraping failed, try fallbacks
+                logger.error(f"Failed to process logo for {site_url}:e}")
                 logo_url, status = self._get_fallback_logo(
                     site, domain, domain_slug, existing_logo
                 )
         else:
-            # No logo found in scraping, use fallbacks
             logger.warning(f"No logo found via scraping for {site_url}")
             logo_url, status = self._get_fallback_logo(
                 site, domain, domain_slug, existing_logo
             )
         
         return {
-            'site_url': site_url,           'display_name': site.get('name', domain),
+            'site_url': site_url,
+            'display_name': site.get('name', domain),
             'logo_url': logo_url,
             'status': status,
             'last_checked_at': datetime.utcnow().isoformat() + 'Z',
@@ -156,23 +163,18 @@ class LogoRefresher:
         }
     
     def _get_fallback_logo(self, site, domain, domain_slug, existing_logo):
-        """Get fallback logo with priority: existing > manual > placeholder."""
+        """Get fallback logo: existing > placeholder."""
         
-        # Priority 1: Keep existing logo if it exists and was successful
+        # Keep existing logo if it exists
         if existing_logo and existing_logo.get('logo_url'):
             if existing_logo.get('status') == 'ok':
                 logger.info(f"→ Keeping previous successful logo for {site['url']}")
                 return existing_logo['logo_url'], 'ok'
             elif existing_logo.get('status') == 'fallback':
                 logger.info(f"→ Keeping previous fallback logo for {site['url']}")
-            return existing_logo['logo_url'], 'fallback'
+                return existing_logo['logo_url'], 'fallback'
         
-        # Priority 2: Use manual fallback URL from config
-        if site.get('fallback_logo_url'):
-            logger.info(f"→ Using manual fallback URL for {site['url']}")
-            return site['fallback_logo_url'], 'fallback'
-        
-        # Priority 3: Generate placeholder only if nothing else exists
+        # Generate placeholder
         logger.info(f"→ Generating placeholder for {site['url']}")
         placeholder_url = self.generator.generate_placeholder(
             site.get('name', domain),
@@ -191,7 +193,7 @@ class LogoRefresher:
 def main():
     """CLI entry point."""
     refresher = LogoRefresher()
-    refresher.refresh_all()
+    refresheesh_all()
 
 
 if __name__ == '__main__':

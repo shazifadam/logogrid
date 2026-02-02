@@ -85,16 +85,13 @@ def add_site():
         flash('URL and Name are required', 'error')
         return redirect('/admin')
     
-    # Load sites
     with open(sites_path, 'r') as f:
         sites = json.load(f)
     
-    # Check duplicates
     if any(site['url'] == url for site in sites):
         flash('Site already exists', 'error')
         return redirect('/admin')
     
-    # Create new site
     new_site = {
         'url': url,
         'name': name,
@@ -108,11 +105,53 @@ def add_site():
     
     sites.append(new_site)
     
-    # Save
     with open(sites_path, 'w') as f:
         json.dump(sites, f, indent=2)
     
     flash('Site added successfully! Click "Scrape All Sites" to fetch the logo.', 'success')
+    return redirect('/admin')
+
+@app.route('/admin/edit-site', methods=['POST'])
+@login_required
+def edit_site():
+    """Edit existing site."""
+    sites_path = os.path.join(os.path.dirname(__file__), '..', 'config', 'sites.json')
+    
+    original_url = request.form.get('original_url', '').strip()
+    url = request.form.get('url', '').strip()
+    name = request.form.get('name', '').strip()
+    category = request.form.get('category', 'government')
+    fallback_logo_url = request.form.get('fallback_logo_url', '').strip()
+    
+    if not url or not name:
+        flash('URL and Name are required', 'error')
+        return redirect('/admin')
+    
+    with open(sites_path, 'r') as f:
+        sites = json.load(f)
+    
+    # Find and update the site
+    site_found = False
+    for site in sites:
+        if site['url'] == original_url:
+            site['url'] = url
+            site['name'] = name
+            site['category'] = category
+            if fallback_logo_url:
+                site['fallback_logo_url'] = fallback_logo_url
+            elif 'fallback_logo_url' in site:
+                del site['fallback_logo_url']
+            site_found = True
+            break
+    
+    if not site_found:
+        flash('Site not found', 'error')
+        return redirect('/admin')
+    
+    with open(sites_path, 'w') as f:
+        json.dump(sites, f, indent=2)
+    
+    flash('Site updated successfully!', 'success')
     return redirect('/admin')
 
 @app.route('/admin/delete-site', methods=['POST'])
@@ -126,11 +165,9 @@ def delete_site():
         flash('URL is required', 'error')
         return redirect('/admin')
     
-    # Load sites
     with open(sites_path, 'r') as f:
         sites = json.load(f)
     
-    # Filter out the site
     original_count = len(sites)
     sites = [site for site in sites if site['url'] != url]
     
@@ -138,7 +175,6 @@ def delete_site():
         flash('Site not found', 'error')
         return redirect('/admin')
     
-    # Save
     with open(sites_path, 'w') as f:
         json.dump(sites, f, indent=2)
     
@@ -161,7 +197,7 @@ def scrape_now():
             traceback.print_exc()
     
     thread = threading.Thread(target=run_scraper)
-    thread.daemon = True
+    threaemon = True
     thread.start()
     
     flash('Scraping started! This may take a few minutes. Refresh the page to see updated status.', 'success')

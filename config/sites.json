@@ -20,5 +20,54 @@
     "country": "MV",
     "enabled": true,
     "fallback_logo_url": "https://presidency.gov.mv/images/po-logo.svg"
+  },
+  {
+    "url": "https://www.foreign.gov.mv/",
+    "name": "Ministry of Foreign Affairs",
+    "category": "ministry",
+    "country": "MV",
+    "enabled": true
+  },
+  {
+    "url": "https://finance.gov.mv/",
+    "name": "Ministry of",
+    "category": "ministry",
+    "country": "MV",
+    "enabled": true
+  },
+  {
+    "url": "https://www.police.gov.mv/",
+    "name": "Police",
+    "category": "agency",
+    "country": "MV",
+    "enabled": true
+  },
+  {
+    "url": "https://trade.gov.mv/en/",
+    "name": "Ministry of Economic Development & Trade",
+    "category": "ministry",
+    "country": "MV",
+    "enabled": true
+  },
+  {
+    "url": "https://www.mira.gov.mv/",
+    "name": "MIRA",
+    "category": "institute",
+    "country": "MV",
+    "enabled": true
+  },
+  {
+    "url": "https://caa.gov.mv",
+    "name": "Ministry of Civil Aviation",
+    "category": "government",
+    "country": "MV",
+    "enabled": true
+  },
+  {
+    "url": "https://majlis.gov.mv/en/20-parliament",
+    "name": "People's Majilis",
+    "category": "government",
+    "country": "MV",
+    "enabled": true
   }
 ]
