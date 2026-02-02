@@ -37,4 +37,3 @@ public/
 # Firebase
 .firebase/
 firebase-debug.log
-.firebaserc
